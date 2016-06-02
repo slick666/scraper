@@ -1,0 +1,10 @@
+.DS_Store
+.ropeproject*
+.cache/
+.idea/
+.tox/
+*.egg-info/
+
+*.json
+
+**/scraped_data
