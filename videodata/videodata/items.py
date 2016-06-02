@@ -30,5 +30,3 @@ class VideodataItem(scrapy.Item):
     tags = scrapy.Field()
     speakers = scrapy.Field()
     recorded = scrapy.Field()
-
-
