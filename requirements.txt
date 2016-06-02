@@ -1,3 +1,4 @@
 Scrapy==1.1.0
 pycodestyle==2.0.0
 tox==2.3.1
+awesome-slugify==1.6.5
