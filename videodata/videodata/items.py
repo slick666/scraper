@@ -40,5 +40,3 @@ class CategoryItem(scrapy.Item):
     url = scrapy.Field()
     start_date = scrapy.Field()
     slug = scrapy.Field()
-
-
