@@ -14,7 +14,7 @@ class VideoField(scrapy.item.Field):
     video_type = scrapy.Field()
 
 
-class VideodataItem(scrapy.Item):
+class VideoItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     category = scrapy.Field()
@@ -32,3 +32,11 @@ class VideodataItem(scrapy.Item):
     tags = scrapy.Field()
     speakers = scrapy.Field()
     recorded = scrapy.Field()
+
+
+class CategoryItem(scrapy.Item):
+    title = scrapy.Field()
+    description = scrapy.Field()
+    url = scrapy.Field()
+    start_date = scrapy.Field()
+    slug = scrapy.Field()
