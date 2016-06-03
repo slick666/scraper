@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from videodata.videodata import text_tools
+from ..videodata import text_tools
 
 
 class TextToolsTestCase(TestCase):

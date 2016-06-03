@@ -1,12 +1,9 @@
 import json
-
 from urllib.parse import urlencode
 
 import scrapy
 
-from videodata.text_tools import slugify, extract_speakers
-from videodata.items import VideoItem, CategoryItem
-from videodata.iso8601 import duration_as_seconds
+from videodata import items, iso8601, text_tools
 
 
 class YouTubePlaylistEventSpider(scrapy.Spider):
@@ -54,12 +51,12 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
 
     def event_item_builder(self, data):
         """Build Event item"""
-        return CategoryItem(
+        return items.CategoryItem(
             title=data['title'],
             description=data['description'],
             url=self.WEB_PLAYLIST_URL.format(playlist_id=self.playlist_id),
             start_date=data['publishedAt'][0:10],
-            slug=slugify(data['title']),
+            slug=text_tools.slugify(data['title']),
         )
 
     def parse_video(self, response):
@@ -72,9 +69,9 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
         thumbnail = snippet['thumbnails'].get('standard', snippet['thumbnails']['maxres'])
 
         url = self.WEB_VIDEO_URL.format(video_id=data['id'])
-        duration = duration_as_seconds(data['contentDetails']['duration'])
+        duration = iso8601.duration_as_seconds(data['contentDetails']['duration'])
 
-        yield VideoItem(
+        yield items.VideoItem(
             title=snippet['title'],
             summary='',
             description=snippet['description'],
@@ -86,9 +83,9 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
             duration=duration,
             source_url=url,
             recorded=snippet['publishedAt'][0:10],
-            slug=slugify(snippet['title']),
+            slug=text_tools.slugify(snippet['title']),
             tags=[],
-            speakers=extract_speakers(snippet['description']),
+            speakers=text_tools.extract_speakers(snippet['description']),
             videos=[{
                 'length': duration,
                 'url': url,
