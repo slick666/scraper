@@ -11,4 +11,4 @@ install:
 
 script:
   - pycodestyle ./
-  - py.test ./videodata/tests
+  - py.test ./tests

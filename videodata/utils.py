@@ -28,16 +28,3 @@ def duration_as_seconds(duration):
         delta *= -1
 
     return int(delta.total_seconds())
-
-
-EXTRACT_SPEAKERS_RE = re.compile('speaker[s]?: (.+)', re.IGNORECASE)
-
-
-def extract_speakers(text):
-    match = EXTRACT_SPEAKERS_RE.findall(text)
-
-    result = []
-    for line in match:
-        result += [speaker.strip() for speaker in line.split(',')]
-
-    return result

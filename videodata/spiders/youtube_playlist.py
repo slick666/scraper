@@ -1,9 +1,23 @@
 import json
+import re
 from urllib.parse import urlencode
 
 import scrapy
 
 from videodata import items, utils
+
+
+EXTRACT_SPEAKERS_RE = re.compile('speaker[s]?: (.+)', re.IGNORECASE)
+
+
+def extract_speakers(text):
+    match = EXTRACT_SPEAKERS_RE.findall(text)
+
+    result = []
+    for line in match:
+        result += [speaker.strip() for speaker in line.split(',')]
+
+    return result
 
 
 class YouTubePlaylistEventSpider(scrapy.Spider):
@@ -85,7 +99,7 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
             recorded=snippet['publishedAt'][0:10],
             slug=utils.slugify(snippet['title']),
             tags=[],
-            speakers=utils.extract_speakers(snippet['description']),
+            speakers=extract_speakers(snippet['description']),
             videos=[{
                 'length': duration,
                 'url': url,

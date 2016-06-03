@@ -1,13 +1,13 @@
 from unittest import TestCase
 
-from ..videodata import utils
+from ..videodata.spiders import youtube_playlist
 
 
 class TextToolsTestCase(TestCase):
     def test_extract_speakers_empty(self):
         text = '''Intro'''
 
-        speakers = utils.extract_speakers(text)
+        speakers = youtube_playlist.extract_speakers(text)
 
         self.assertEqual([], speakers)
 
@@ -18,7 +18,7 @@ class TextToolsTestCase(TestCase):
         Outro
         '''
 
-        speakers = utils.extract_speakers(text)
+        speakers = youtube_playlist.extract_speakers(text)
 
         self.assertEqual(['First Speaker'], speakers)
 
@@ -29,7 +29,7 @@ class TextToolsTestCase(TestCase):
         Outro
         '''
 
-        speakers = utils.extract_speakers(text)
+        speakers = youtube_playlist.extract_speakers(text)
 
         self.assertIn('First Speaker', speakers)
         self.assertIn('高 國棟', speakers)
