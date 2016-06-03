@@ -138,7 +138,8 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
 
         items = data.get('items', [])
 
-        assert len(items) == 1, 'Playlist `{}` not found!'.format(self.playlist_id)
+        if len(items) != 1:
+            raise ValueError('Playlist `{}` not found!'.format(self.playlist_id))
 
         event_data = items[0]['snippet']
         yield self.event_item_builder(event_data)
