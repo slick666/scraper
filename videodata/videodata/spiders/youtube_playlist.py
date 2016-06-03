@@ -54,14 +54,18 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
             self.API_BASE_URL + 'playlists?' + urlencode(playlists_url_parameters),
         ]
 
+    @staticmethod
+    def slugify(value):
+        return slugify(value, to_lower=True, max_length=50)
+
     def event_item_builder(self, data):
         """Build Event item"""
         return CategoryItem(
             title=data['title'],
             description=data['description'],
             url=self.WEB_PLAYLIST_URL.format(playlist_id=self.playlist_id),
-            start_date=datetime.strptime(data['publishedAt'][0:10], '%Y-%m-%d'),
-            slug=slugify(data['title']),
+            start_date=data['publishedAt'][0:10],
+            slug=self.slugify(data['title']),
         )
 
     def parse_video(self, response):
@@ -87,8 +91,8 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
             thumbnail_url=thumbnail['url'],
             duration=duration,
             source_url=url,
-            recorded=datetime.strptime(snippet['publishedAt'][0:10], '%Y-%m-%d'),
-            slug=slugify(snippet['title'], to_lower=True, max_length=50),
+            recorded=snippet['publishedAt'][0:10],
+            slug=self.slugify(snippet['title']),
             tags=[],
             speakers=[],
             videos=[{
