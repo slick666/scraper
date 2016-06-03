@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 
 import scrapy
 
-from videodata import items, utils, text_tools
+from videodata import items, utils
 
 
 class YouTubePlaylistEventSpider(scrapy.Spider):
@@ -56,7 +56,7 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
             description=data['description'],
             url=self.WEB_PLAYLIST_URL.format(playlist_id=self.playlist_id),
             start_date=data['publishedAt'][0:10],
-            slug=text_tools.slugify(data['title']),
+            slug=utils.slugify(data['title']),
         )
 
     def parse_video(self, response):
@@ -83,9 +83,9 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
             duration=duration,
             source_url=url,
             recorded=snippet['publishedAt'][0:10],
-            slug=text_tools.slugify(snippet['title']),
+            slug=utils.slugify(snippet['title']),
             tags=[],
-            speakers=text_tools.extract_speakers(snippet['description']),
+            speakers=utils.extract_speakers(snippet['description']),
             videos=[{
                 'length': duration,
                 'url': url,
