@@ -24,4 +24,4 @@ where:
 
 * `playlist_id` is a `list` query parameter from the YouTube playlist URL (example: https://www.youtube.com/playlist?list=PLqtzN042QpfcOm_sOXxAixvNs9QWhhX5w)
 * `api_key` is an API Key for Google (required only if public API usage quota is exhausted) - for more info how to obtain the API key, visit: https://support.google.com/cloud/answer/6158862
-* `output_root_directory` a root directory where the scraping results will be stored (default: `<current-working-directory>/output`)
+* `output_root_directory` a root directory where the scraping results will be stored (default: `<current-working-directory>/scraped_data`)
