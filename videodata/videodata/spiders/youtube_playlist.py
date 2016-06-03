@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 
 import scrapy
 
-from videodata import items, iso8601, text_tools
+from videodata import items, utils, text_tools
 
 
 class YouTubePlaylistEventSpider(scrapy.Spider):
@@ -69,7 +69,7 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
         thumbnail = snippet['thumbnails'].get('standard', snippet['thumbnails']['maxres'])
 
         url = self.WEB_VIDEO_URL.format(video_id=data['id'])
-        duration = iso8601.duration_as_seconds(data['contentDetails']['duration'])
+        duration = utils.duration_as_seconds(data['contentDetails']['duration'])
 
         yield items.VideoItem(
             title=snippet['title'],
