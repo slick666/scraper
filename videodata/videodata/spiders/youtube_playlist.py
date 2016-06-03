@@ -1,12 +1,10 @@
 import json
 
 from urllib.parse import urlencode
-from datetime import datetime
 
 import scrapy
 
-from slugify import slugify
-
+from videodata.text_tools import slugify, extract_speakers
 from videodata.items import VideoItem, CategoryItem
 from videodata.iso8601 import duration_as_seconds
 
@@ -54,10 +52,6 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
             self.API_BASE_URL + 'playlists?' + urlencode(playlists_url_parameters),
         ]
 
-    @staticmethod
-    def slugify(value):
-        return slugify(value, to_lower=True, max_length=50)
-
     def event_item_builder(self, data):
         """Build Event item"""
         return CategoryItem(
@@ -65,7 +59,7 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
             description=data['description'],
             url=self.WEB_PLAYLIST_URL.format(playlist_id=self.playlist_id),
             start_date=data['publishedAt'][0:10],
-            slug=self.slugify(data['title']),
+            slug=slugify(data['title']),
         )
 
     def parse_video(self, response):
@@ -92,9 +86,9 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
             duration=duration,
             source_url=url,
             recorded=snippet['publishedAt'][0:10],
-            slug=self.slugify(snippet['title']),
+            slug=slugify(snippet['title']),
             tags=[],
-            speakers=[],
+            speakers=extract_speakers(snippet['description']),
             videos=[{
                 'length': duration,
                 'url': url,
