@@ -1,17 +1,29 @@
 import json
 
 from urllib.parse import urlencode
+from datetime import datetime
 
 import scrapy
 
 from slugify import slugify
 
+from videodata.items import VideoItem, CategoryItem
+from videodata.iso8601 import duration_as_seconds
+
 
 class YouTubePlaylistEventSpider(scrapy.Spider):
     """YouTube Playlist Event scraper for PyVideo/PyTube"""
 
-    BASE_API_URL = 'https://www.googleapis.com/youtube/v3/'
+    API_BASE_URL = 'https://www.googleapis.com/youtube/v3/'
     API_MAX_RESULTS = 50
+
+    WEB_VIDEO_URL = 'https://www.youtube.com/watch?v={video_id}'
+    WEB_PLAYLIST_URL = 'https://www.youtube.com/playlist?list={playlist_id}'
+
+    LICENSE_TYPES = {
+        'youtube': 'Standard YouTube Licence',
+        'creativeCommon': 'CC-BY',
+    }
 
     name = 'youtube_playlist'
 
@@ -39,46 +51,74 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
         playlists_url_parameters['id'] = self.playlist_id
 
         self.start_urls = [
-            self.BASE_API_URL + 'playlists?' + urlencode(playlists_url_parameters),
+            self.API_BASE_URL + 'playlists?' + urlencode(playlists_url_parameters),
         ]
 
     def event_item_builder(self, data):
         """Build Event item"""
-        return data
+        return CategoryItem(
+            title=data['title'],
+            description=data['description'],
+            url=self.WEB_PLAYLIST_URL.format(playlist_id=self.playlist_id),
+            start_date=datetime.strptime(data['publishedAt'][0:10], '%Y-%m-%d'),
+            slug=slugify(data['title']),
+        )
 
-    def talk_item_builder(self, data):
-        """Build Talk item"""
-        return {
-            'title': data.get('fulltitle', data['title']),
-            'summary': data['description'],
-            'description': '',
-            'category': '',
-            'quality_notes': '',
-            'language': '',
-            'copyright_text': '',
-            'thumbnail_url': data['thumbnail'],
-            'duration': data['duration'],
-            'source_url': data['webpage_url'],
-            'recorded': datetime.strptime(data['upload_date'], '%Y%m%d'),
-            'slug': slugify(data['fulltitle'], to_lower=True, max_length=50),
-            'tags': data.get('categories', []) + data.get('tags', []),
-            'speakers': [],
-            'videos': [{
-                'length': 0,
-                'url': data['webpage_url'],
-                'type': 'youtube'
+    def parse_video(self, response):
+        """Parse Video and build a VideoItem"""
+        payload = json.loads(response.body.decode())
+
+        data = payload['items'][0]
+
+        snippet = data['snippet']
+        thumbnail = snippet['thumbnails'].get('standard', snippet['thumbnails']['maxres'])
+
+        url = self.WEB_VIDEO_URL.format(video_id=data['id'])
+        duration = duration_as_seconds(data['contentDetails']['duration'])
+
+        yield VideoItem(
+            title=snippet['title'],
+            summary='',
+            description=snippet['description'],
+            category=response.meta['event']['title'],
+            quality_notes=data['contentDetails']['definition'],
+            language=snippet['defaultAudioLanguage'],
+            copyright_text=self.LICENSE_TYPES.get(data['status']['license'], data['status']['license']),
+            thumbnail_url=thumbnail['url'],
+            duration=duration,
+            source_url=url,
+            recorded=datetime.strptime(snippet['publishedAt'][0:10], '%Y-%m-%d'),
+            slug=slugify(snippet['title'], to_lower=True, max_length=50),
+            tags=[],
+            speakers=[],
+            videos=[{
+                'length': duration,
+                'url': url,
+                'type': 'youtube',
             }]
-        }
+        )
 
     def generate_talks_url(self, page_token=None):
         """Generate talks API URL"""
-        playlist_items_url_parameters = self.base_url_parameters.copy()
-        playlist_items_url_parameters['playlistId'] = self.playlist_id
+        url_parameters = self.base_url_parameters.copy()
+        url_parameters.update({
+            'playlistId': self.playlist_id,
+        })
 
         if page_token:
-            playlist_items_url_parameters['pageToken'] = page_token
+            url_parameters['pageToken'] = page_token
 
-        return self.BASE_API_URL + 'playlistItems?' + urlencode(playlist_items_url_parameters)
+        return self.API_BASE_URL + 'playlistItems?' + urlencode(url_parameters)
+
+    def generate_video_url(self, video_id):
+        """Generate Video API URL"""
+        url_parameters = self.base_url_parameters.copy()
+        url_parameters.update({
+            'id': video_id,
+            'part': 'snippet,contentDetails,status'
+        })
+
+        return self.API_BASE_URL + 'videos?' + urlencode(url_parameters)
 
     def parse_talks(self, response):
         """Parse talks from the response and handle pagination of the Google API results"""
@@ -86,7 +126,9 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
 
         items = data.get('items', [])
         for item in items:
-            yield self.talk_item_builder(item['snippet'])
+            yield scrapy.Request(self.generate_video_url(item['snippet']['resourceId']['videoId']),
+                                 callback=self.parse_video,
+                                 meta=response.meta)
 
         if 'nextPageToken' in data:
             yield scrapy.Request(self.generate_talks_url(page_token=data['nextPageToken']),
@@ -97,7 +139,10 @@ class YouTubePlaylistEventSpider(scrapy.Spider):
         data = json.loads(response.body.decode())
 
         items = data.get('items', [])
-        for item in items:
-            yield self.event_item_builder(item['snippet'])
 
-        yield scrapy.Request(self.generate_talks_url(), callback=self.parse_talks)
+        assert len(items) == 1, 'Playlist `{}` not found!'.format(self.playlist_id)
+
+        event_data = items[0]['snippet']
+        yield self.event_item_builder(event_data)
+
+        yield scrapy.Request(self.generate_talks_url(), callback=self.parse_talks, meta={'event': event_data})
