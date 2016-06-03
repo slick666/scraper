@@ -25,7 +25,7 @@ class TextToolsTestCase(TestCase):
     def test_extract_speakers_multiple(self):
         text = '''
         Intro
-        Speaker: First Speaker, 高 國棟, Łąki Łan
+        Speakers: First Speaker, 高 國棟, Łąki Łan
         Outro
         '''
 

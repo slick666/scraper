@@ -8,7 +8,7 @@ from slugify import slugify as _slugify
 slugify = partial(_slugify, to_lower=True, max_length=50)
 
 
-EXTRACT_SPEAKERS_RE = re.compile('speaker: (.+)', re.IGNORECASE)
+EXTRACT_SPEAKERS_RE = re.compile('speaker[s]?: (.+)', re.IGNORECASE)
 
 
 def extract_speakers(text):
